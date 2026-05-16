@@ -11,6 +11,8 @@ import { apiSend } from "@/lib/client/api";
 import { formatCurrency } from "@/lib/format";
 import { useCart } from "@/lib/store/cart";
 import { useI18n } from "@/lib/useI18n";
+import { buildOrderWhatsAppUrl } from "@/lib/whatsapp";
+import type { Order } from "@/lib/types";
 
 export default function CheckoutPage() {
   const { t, locale } = useI18n();
@@ -23,7 +25,7 @@ export default function CheckoutPage() {
   const currency = settings?.currency ?? "USD";
   const taxRate = settings?.taxRate ?? 10;
 
-  const [done, setDone] = useState<string | null>(null);
+  const [done, setDone] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,11 +53,11 @@ export default function CheckoutPage() {
     setError(null);
     setSubmitting(true);
     try {
-      const order = await apiSend<{ id: string }>("/api/orders", "POST", {
+      const order = await apiSend<Order>("/api/orders", "POST", {
         useProfile: true,
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
       });
-      setDone(order.id);
+      setDone(order);
       clear();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error");
@@ -73,7 +75,7 @@ export default function CheckoutPage() {
       // For guests: email is not in the form at all, so it will be undefined.
       // For authenticated users: email is present as a readonly field.
       const emailValue = data.get("email");
-      const order = await apiSend<{ id: string }>("/api/orders", "POST", {
+      const order = await apiSend<Order>("/api/orders", "POST", {
         customer: {
           name: String(data.get("name") ?? "").trim(),
           email: emailValue ? String(emailValue).trim() || undefined : undefined,
@@ -85,7 +87,7 @@ export default function CheckoutPage() {
           quantity: i.quantity,
         })),
       });
-      setDone(order.id);
+      setDone(order);
       clear();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
@@ -95,6 +97,20 @@ export default function CheckoutPage() {
   }
 
   if (done) {
+    const whatsappUrl = settings?.whatsappNumber
+      ? buildOrderWhatsAppUrl(settings.whatsappNumber, {
+          orderId: done.id,
+          total: formatCurrency(done.total, locale, currency),
+          items: done.items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: formatCurrency(i.price * i.quantity, locale, currency),
+          })),
+          locale,
+          storeName: settings.storeName,
+        })
+      : null;
+
     return (
       <StoreShell>
         <div className="mx-auto max-w-xl rounded-2xl border border-ink-100 bg-white p-8 text-center shadow-soft">
@@ -107,10 +123,24 @@ export default function CheckoutPage() {
           <p className="mt-2 text-sm text-ink-500">
             {t("checkout.success.body")}
           </p>
-          <p className="mt-4 text-sm text-ink-400">Order {done}</p>
+          <p className="mt-4 text-sm text-ink-400">Order {done.id}</p>
+
+          {/* WhatsApp confirmation CTA */}
+          {whatsappUrl && (
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-medium text-white hover:bg-emerald-700 shadow-soft transition"
+            >
+              <Icon name="MessageCircle" size={18} />
+              {t("whatsapp.confirmOrder")}
+            </a>
+          )}
+
           <Link
             href="/"
-            className="mt-6 inline-flex h-11 items-center justify-center rounded-xl bg-ink-900 px-5 text-sm font-medium text-white hover:bg-ink-800"
+            className="mt-4 inline-flex h-11 items-center justify-center rounded-xl bg-ink-900 px-5 text-sm font-medium text-white hover:bg-ink-800"
           >
             {t("cart.empty.cta")}
           </Link>

@@ -61,7 +61,8 @@ export const INVOICE_COLUMNS =
 export const SETTINGS_COLUMNS =
   "id, store_id, store_name, currency, tax_rate, low_stock_threshold, " +
   "contact_email, contact_phone, address, footer_tagline, " +
-  "facebook_url, instagram_url, twitter_url, youtube_url, linkedin_url, tiktok_url";
+  "facebook_url, instagram_url, twitter_url, youtube_url, linkedin_url, tiktok_url, " +
+  "whatsapp_number";
 
 // ============================================================================
 // Small utilities
@@ -465,6 +466,7 @@ export interface SettingsRow {
   youtube_url?: string | null;
   linkedin_url?: string | null;
   tiktok_url?: string | null;
+  whatsapp_number?: string | null;
 }
 
 export function settingsFromRow(r: SettingsRow): Settings {
@@ -484,6 +486,7 @@ export function settingsFromRow(r: SettingsRow): Settings {
     youtubeUrl: r.youtube_url ?? "",
     linkedinUrl: r.linkedin_url ?? "",
     tiktokUrl: r.tiktok_url ?? "",
+    whatsappNumber: r.whatsapp_number ?? "",
   };
 }
 
@@ -505,5 +508,6 @@ export function settingsToRow(s: Partial<Settings>): Partial<SettingsRow> {
   if (s.youtubeUrl !== undefined) row.youtube_url = s.youtubeUrl;
   if (s.linkedinUrl !== undefined) row.linkedin_url = s.linkedinUrl;
   if (s.tiktokUrl !== undefined) row.tiktok_url = s.tiktokUrl;
+  if (s.whatsappNumber !== undefined) row.whatsapp_number = s.whatsappNumber;
   return row;
 }

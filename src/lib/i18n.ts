@@ -212,6 +212,18 @@ export const messages: Dict = {
     fr: "unités sur {count} produits",
   },
 
+  // WhatsApp
+  "whatsapp.orderDirect": {
+    en: "Order via WhatsApp",
+    ar: "اطلب عبر واتساب",
+    fr: "Commander via WhatsApp",
+  },
+  "whatsapp.confirmOrder": {
+    en: "Confirm Order via WhatsApp",
+    ar: "تأكيد الطلب عبر واتساب",
+    fr: "Confirmer via WhatsApp",
+  },
+
   // Footer
   "footer.contact": { en: "Contact", ar: "اتصل بنا", fr: "Contact" },
   "footer.follow": { en: "Follow us", ar: "تابعنا", fr: "Suivez-nous" },
