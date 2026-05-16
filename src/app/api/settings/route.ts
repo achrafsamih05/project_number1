@@ -92,6 +92,12 @@ export const PATCH = (req: NextRequest) =>
     const tk = url(body.tiktokUrl);
     if (tk !== undefined) patch.tiktokUrl = tk;
 
+    // WhatsApp number: strip everything except digits and leading +
+    if (typeof body.whatsappNumber === "string") {
+      const cleaned = body.whatsappNumber.trim().replace(/[^\d+]/g, "");
+      patch.whatsappNumber = cleaned.slice(0, 20);
+    }
+
     const updated = await updateSettings(patch, storeId);
     emit({ channel: "settings", action: "updated" });
     return updated;

@@ -75,6 +75,7 @@ export function Footer() {
     youtubeUrl: "",
     linkedinUrl: "",
     tiktokUrl: "",
+    whatsappNumber: "",
   };
 
   const socials = socialLinks(s);

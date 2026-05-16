@@ -156,4 +156,8 @@ export interface Settings {
   youtubeUrl: string;
   linkedinUrl: string;
   tiktokUrl: string;
+
+  /** WhatsApp number with country code (e.g. "+212612345678"). Used for
+   *  click-to-order buttons and post-checkout confirmation CTAs. */
+  whatsappNumber: string;
 }

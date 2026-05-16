@@ -8,6 +8,7 @@ import { toast } from "@/lib/store/toast";
 import { useSettings } from "@/lib/client/hooks";
 import { formatCurrency } from "@/lib/format";
 import { useI18n } from "@/lib/useI18n";
+import { buildProductWhatsAppUrl } from "@/lib/whatsapp";
 import type { Product } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -333,6 +334,26 @@ export function QuickViewModal({
                 <Icon name="ShoppingBag" size={16} />
                 {t("product.add")}
               </button>
+
+              {/* WhatsApp "Order Directly" button — only shown when merchant
+                  has configured a WhatsApp number */}
+              {settings?.whatsappNumber && !outOfStock && (
+                <a
+                  href={buildProductWhatsAppUrl(settings.whatsappNumber, {
+                    productName: product.name[locale],
+                    productUrl: typeof window !== "undefined" ? window.location.href : "",
+                    price: formatCurrency(product.price, locale, currency),
+                    locale,
+                    storeName: settings.storeName,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-medium transition bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 shadow-soft"
+                >
+                  <Icon name="MessageCircle" size={16} />
+                  {t("whatsapp.orderDirect")}
+                </a>
+              )}
             </div>
           </div>
         </div>

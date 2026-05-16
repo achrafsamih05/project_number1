@@ -186,6 +186,29 @@ export default function AdminSettings() {
           {/* ----- Social media links ----- */}
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
             <header className="mb-4">
+              <h2 className="text-base font-semibold">WhatsApp</h2>
+              <p className="mt-0.5 text-xs text-ink-500">
+                Your WhatsApp business number (with country code). Used for
+                "Order via WhatsApp" buttons on the storefront.
+              </p>
+            </header>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field label="WhatsApp number" className="md:col-span-2">
+                <input
+                  type="tel"
+                  value={form.whatsappNumber}
+                  onChange={(e) => set("whatsappNumber", e.target.value)}
+                  className={inputCls}
+                  placeholder="+212 612 345 678"
+                  maxLength={32}
+                />
+              </Field>
+            </div>
+          </section>
+
+          {/* ----- Social media links ----- */}
+          <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
+            <header className="mb-4">
               <h2 className="text-base font-semibold">Social media</h2>
               <p className="mt-0.5 text-xs text-ink-500">
                 Paste the full URL. Only populated networks render a footer
