@@ -14,6 +14,9 @@ import { getSupabaseAdmin } from "./supabase";
 // store they're operating on.
 // ---------------------------------------------------------------------------
 
+export type SubscriptionPlan = "free" | "starter" | "pro" | "enterprise";
+export type PlanStatus = "active" | "past_due" | "canceled" | "trialing";
+
 export interface Store {
   id: string;
   ownerId: string;
@@ -22,7 +25,9 @@ export interface Store {
   customDomain: string | null;
   logoUrl: string | null;
   status: "active" | "suspended" | "onboarding";
-  plan: "free" | "starter" | "pro" | "enterprise";
+  plan: SubscriptionPlan;
+  planStatus: PlanStatus;
+  trialEndsAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -36,12 +41,14 @@ interface StoreRow {
   logo_url: string | null;
   status: string;
   plan: string;
+  plan_status: string;
+  trial_ends_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
 const STORE_COLUMNS =
-  "id, owner_id, name, slug, custom_domain, logo_url, status, plan, created_at, updated_at";
+  "id, owner_id, name, slug, custom_domain, logo_url, status, plan, plan_status, trial_ends_at, created_at, updated_at";
 
 function storeFromRow(row: StoreRow): Store {
   return {
@@ -53,6 +60,8 @@ function storeFromRow(row: StoreRow): Store {
     logoUrl: row.logo_url,
     status: row.status as Store["status"],
     plan: row.plan as Store["plan"],
+    planStatus: (row.plan_status ?? "active") as Store["planStatus"],
+    trialEndsAt: row.trial_ends_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -186,9 +195,14 @@ export async function resolveCurrentTenant(): Promise<Store | null> {
     return getStoreBySlug(slug);
   }
 
-  // Custom domain resolution
+  // Custom domain resolution — requires enterprise plan
   if (customDomain) {
-    return getStoreByDomain(customDomain);
+    const store = await getStoreByDomain(customDomain);
+    // If the store exists but isn't on enterprise, custom domain won't resolve
+    if (store && store.plan !== "enterprise" && store.plan !== "pro") {
+      return null; // Falls back to "store not found" for non-enterprise stores
+    }
+    return store;
   }
 
   // No tenant identifiers present (shouldn't happen if middleware ran)
