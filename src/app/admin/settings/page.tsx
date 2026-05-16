@@ -183,13 +183,12 @@ export default function AdminSettings() {
             </div>
           </section>
 
-          {/* ----- Social media links ----- */}
+          {/* ----- WhatsApp settings Section ----- */}
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft">
             <header className="mb-4">
               <h2 className="text-base font-semibold">WhatsApp</h2>
               <p className="mt-0.5 text-xs text-ink-500">
-                Your WhatsApp business number (with country code). Used for
-                "Order via WhatsApp" buttons on the storefront.
+                {"Your WhatsApp business number (with country code). Used for \"Order via WhatsApp\" buttons on the storefront."}
               </p>
             </header>
             <div className="grid gap-4 md:grid-cols-2">
