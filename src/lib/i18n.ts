@@ -78,6 +78,7 @@ export const messages: Dict = {
   "checkout.name": { en: "Full name", ar: "الاسم الكامل", fr: "Nom complet" },
   "checkout.email": { en: "Email", ar: "البريد الإلكتروني", fr: "E-mail" },
   "checkout.phone": { en: "Phone", ar: "الهاتف", fr: "Téléphone" },
+  "checkout.phonePlaceholder": { en: "e.g. 0555 123 456", ar: "مثال: 0555 123 456", fr: "ex. 0555 123 456" },
   "checkout.address": { en: "Shipping address", ar: "عنوان الشحن", fr: "Adresse de livraison" },
   "checkout.place": { en: "Place order", ar: "تأكيد الطلب", fr: "Passer la commande" },
   "checkout.or": { en: "— or enter shipping details below —", ar: "— أو أدخل تفاصيل الشحن أدناه —", fr: "— ou saisissez les détails ci-dessous —" },
@@ -166,6 +167,50 @@ export const messages: Dict = {
   "admin.users": { en: "Users", ar: "المستخدمون", fr: "Utilisateurs" },
   "admin.settings": { en: "Settings", ar: "الإعدادات", fr: "Paramètres" },
   "admin.expenses": { en: "Expenses & Profits", ar: "المصاريف والأرباح", fr: "Dépenses & profits" },
+
+  // Micro-ERP Dashboard
+  "erp.title": { en: "Financial Overview", ar: "النظرة المالية", fr: "Aperçu financier" },
+  "erp.subtitle": {
+    en: "Capital, revenue projections and stock health for your store.",
+    ar: "رأس المال وتوقعات الإيرادات وصحة المخزون لمتجرك.",
+    fr: "Capital, projections de revenus et santé du stock.",
+  },
+  "erp.capitalTied": { en: "Capital Tied in Stock", ar: "رأس المال المحبوس", fr: "Capital immobilisé" },
+  "erp.capitalTied.hint": {
+    en: "Total purchase cost of current inventory",
+    ar: "إجمالي تكلفة شراء المخزون الحالي",
+    fr: "Coût d'achat total du stock actuel",
+  },
+  "erp.projectedRevenue": { en: "Projected Revenue", ar: "الإيرادات المتوقعة", fr: "Revenus projetés" },
+  "erp.projectedRevenue.hint": {
+    en: "If all stock sells at list price",
+    ar: "إذا بيع كل المخزون بسعر البيع",
+    fr: "Si tout le stock est vendu au prix affiché",
+  },
+  "erp.projectedProfit": { en: "Projected Net Profit", ar: "صافي الربح المتوقع", fr: "Bénéfice net projeté" },
+  "erp.projectedProfit.hint": {
+    en: "Revenue minus cost of goods",
+    ar: "الإيرادات ناقص تكلفة البضائع",
+    fr: "Revenus moins coût des marchandises",
+  },
+  "erp.averageMargin": { en: "Average Margin", ar: "متوسط هامش الربح", fr: "Marge moyenne" },
+  "erp.averageMargin.hint": {
+    en: "Weighted by capital invested",
+    ar: "مرجّح بحسب رأس المال المستثمر",
+    fr: "Pondéré par le capital investi",
+  },
+  "erp.lowStock": { en: "Low Stock Alerts", ar: "تنبيهات المخزون المنخفض", fr: "Alertes stock bas" },
+  "erp.lowStock.empty": {
+    en: "All products are well stocked.",
+    ar: "جميع المنتجات متوفرة بكميات جيدة.",
+    fr: "Tous les produits sont bien approvisionnés.",
+  },
+  "erp.units": { en: "units", ar: "وحدة", fr: "unités" },
+  "erp.unitsAcross": {
+    en: "units across {count} products",
+    ar: "وحدة عبر {count} منتج",
+    fr: "unités sur {count} produits",
+  },
 
   // Footer
   "footer.contact": { en: "Contact", ar: "اتصل بنا", fr: "Contact" },

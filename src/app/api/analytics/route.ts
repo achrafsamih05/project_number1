@@ -75,7 +75,27 @@ export const GET = () =>
       .filter((p) => p.stock <= settings.lowStockThreshold)
       .sort((a, b) => a.stock - b.stock)
       .slice(0, 8)
-      .map((p) => ({ id: p.id, name: p.name.en, stock: p.stock, sku: p.sku }));
+      .map((p) => ({ id: p.id, name: p.name.en, nameAr: p.name.ar, stock: p.stock, sku: p.sku, price: p.price, purchasePrice: p.purchasePrice }));
+
+    // --- Micro-ERP Metrics (scoped to store) ---
+    // Capital Tied: Σ(stock × purchase_price) — money locked in inventory
+    // Projected Revenue: Σ(stock × price) — if all stock sells at list price
+    // Projected Profit: Σ(stock × (price - purchase_price)) — net margin on stock
+    let capitalTied = 0;
+    let projectedRevenue = 0;
+    let projectedProfit = 0;
+    let totalStockUnits = 0;
+    let unpricedProducts = 0;
+
+    for (const p of products) {
+      capitalTied += p.purchasePrice * p.stock;
+      projectedRevenue += p.price * p.stock;
+      projectedProfit += (p.price - p.purchasePrice) * p.stock;
+      totalStockUnits += p.stock;
+      if (p.purchasePrice <= 0) unpricedProducts += 1;
+    }
+
+    const averageMargin = capitalTied > 0 ? (projectedProfit / capitalTied) * 100 : 0;
 
     const DAY = 24 * 60 * 60 * 1000;
     const series: { date: string; revenue: number; orders: number }[] = [];
@@ -112,5 +132,14 @@ export const GET = () =>
       lowStock,
       series,
       currency: settings.currency,
+      // Micro-ERP metrics
+      erp: {
+        capitalTied: +capitalTied.toFixed(2),
+        projectedRevenue: +projectedRevenue.toFixed(2),
+        projectedProfit: +projectedProfit.toFixed(2),
+        averageMargin: +averageMargin.toFixed(1),
+        totalStockUnits,
+        unpricedProducts,
+      },
     };
   });
