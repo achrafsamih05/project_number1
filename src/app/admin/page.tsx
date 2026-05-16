@@ -36,6 +36,17 @@ interface Analytics {
     totalStockUnits: number;
     unpricedProducts: number;
   };
+  inventoryIntelligence: {
+    productId: string;
+    name: string;
+    nameAr: string;
+    sku: string;
+    stock: number;
+    unitsSold14d: number;
+    dailyRunRate: number;
+    daysLeft: number | null;
+    status: "critical" | "warning" | "healthy" | "stable";
+  }[];
 }
 
 export default function AdminHome() {
@@ -185,11 +196,14 @@ export default function AdminHome() {
             </section>
           )}
 
-          {/* ─── Low Stock Alerts (Enhanced) ─── */}
-          {data && (
+          {/* ─── Inventory Intelligence Center ─── */}
+          {data?.inventoryIntelligence && (
             <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft lg:col-span-5">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-base font-semibold">{t("erp.lowStock")}</h2>
+                <div>
+                  <h2 className="text-base font-semibold">{t("inventory.intelligence")}</h2>
+                  <p className="text-xs text-ink-500">{t("inventory.intelligence.subtitle")}</p>
+                </div>
                 <Link
                   href="/admin/inventory"
                   className="text-sm text-brand-600 hover:underline"
@@ -197,44 +211,40 @@ export default function AdminHome() {
                   {t("admin.inventory")}
                 </Link>
               </div>
-              {data.lowStock.length > 0 ? (
+              {data.inventoryIntelligence.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[600px] text-sm">
+                  <table className="w-full min-w-[700px] text-sm">
                     <thead className="bg-ink-50 text-ink-600">
                       <tr>
                         <th className="px-3 py-2 text-start font-medium">{locale === "ar" ? "المنتج" : "Product"}</th>
                         <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "المخزون" : "Stock"}</th>
-                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "سعر الشراء" : "Cost"}</th>
-                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "سعر البيع" : "Sale"}</th>
-                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "رأس المال" : "Capital"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "معدل السحب" : "Velocity"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "الأيام المتبقية" : "Days Left"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "الحالة" : "Status"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-ink-100">
-                      {data.lowStock.map((p) => (
-                        <tr key={p.id} className="hover:bg-ink-50/50">
+                      {data.inventoryIntelligence.slice(0, 12).map((item) => (
+                        <tr key={item.productId} className="hover:bg-ink-50/50">
                           <td className="px-3 py-2">
-                            <div className="font-medium">{locale === "ar" ? p.nameAr : p.name}</div>
-                            <div className="text-xs text-ink-500">{p.sku}</div>
+                            <div className="font-medium">{locale === "ar" ? item.nameAr : item.name}</div>
+                            <div className="text-xs text-ink-500">{item.sku}</div>
                           </td>
-                          <td className="px-3 py-2 text-end">
-                            <span
-                              className={
-                                p.stock <= 5
-                                  ? "inline-flex rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700"
-                                  : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
-                              }
-                            >
-                              {p.stock}
-                            </span>
-                          </td>
+                          <td className="px-3 py-2 text-end font-medium">{item.stock}</td>
                           <td className="px-3 py-2 text-end text-ink-600">
-                            {p.purchasePrice > 0 ? formatCurrency(p.purchasePrice, locale, data.currency) : "—"}
+                            {item.dailyRunRate > 0
+                              ? `${item.dailyRunRate} ${locale === "ar" ? "وحدة/يوم" : "units/day"}`
+                              : <span className="text-ink-400">—</span>}
                           </td>
                           <td className="px-3 py-2 text-end">
-                            {formatCurrency(p.price, locale, data.currency)}
+                            {item.daysLeft !== null
+                              ? <span className={item.daysLeft <= 3 ? "font-semibold text-red-600" : item.daysLeft <= 7 ? "font-semibold text-amber-600" : "text-ink-700"}>
+                                  {item.daysLeft} {locale === "ar" ? "يوم" : "days"}
+                                </span>
+                              : <span className="text-ink-400">∞</span>}
                           </td>
-                          <td className="px-3 py-2 text-end font-medium">
-                            {formatCurrency(p.purchasePrice * p.stock, locale, data.currency)}
+                          <td className="px-3 py-2 text-end">
+                            <StockBadge status={item.status} locale={locale} />
                           </td>
                         </tr>
                       ))}
@@ -410,5 +420,41 @@ function ErpCard({
         {hint && <p className="mt-0.5 text-xs text-ink-500">{hint}</p>}
       </div>
     </div>
+  );
+}
+
+
+
+// ---------- Stock Intelligence Badge ---------------------------------------
+
+const BADGE_CONFIG = {
+  critical: {
+    en: "Out of Stock Risk",
+    ar: "خطر نفاد المخزون",
+    cls: "bg-red-50 text-red-700",
+  },
+  warning: {
+    en: "Restock Recommended",
+    ar: "يُنصح بإعادة التخزين",
+    cls: "bg-amber-50 text-amber-700",
+  },
+  healthy: {
+    en: "Healthy Stock",
+    ar: "مخزون صحي",
+    cls: "bg-emerald-50 text-emerald-700",
+  },
+  stable: {
+    en: "Stable / No sales",
+    ar: "مستقر / لا مبيعات",
+    cls: "bg-ink-100 text-ink-600",
+  },
+} as const;
+
+function StockBadge({ status, locale }: { status: keyof typeof BADGE_CONFIG; locale: string }) {
+  const cfg = BADGE_CONFIG[status];
+  return (
+    <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${cfg.cls}`}>
+      {locale === "ar" ? cfg.ar : cfg.en}
+    </span>
   );
 }
