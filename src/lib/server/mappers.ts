@@ -38,28 +38,28 @@ import type {
 // ============================================================================
 
 export const PRODUCT_COLUMNS =
-  "id, sku, name_en, name_ar, name_fr, description_en, description_ar, description_fr, " +
+  "id, store_id, sku, name_en, name_ar, name_fr, description_en, description_ar, description_fr, " +
   "price, purchase_price, category_id, stock, image, images, rating, created_at";
 
 export const CATEGORY_COLUMNS =
-  "id, slug, name_en, name_ar, name_fr, icon";
+  "id, store_id, slug, name_en, name_ar, name_fr, icon";
 
 export const USER_COLUMNS =
-  "id, email, name, role, phone, address, city, postal_code, country, " +
+  "id, store_id, email, name, role, phone, address, city, postal_code, country, " +
   "banned, password_hash, created_at, last_seen_at";
 
 export const ORDER_COLUMNS =
-  "id, user_id, customer_name, customer_email, customer_phone, customer_address, " +
+  "id, store_id, user_id, customer_name, customer_email, customer_phone, customer_address, " +
   "subtotal, tax, total, status, created_at";
 
 export const ORDER_ITEM_COLUMNS =
   "id, order_id, product_id, name, quantity, price";
 
 export const INVOICE_COLUMNS =
-  "id, order_id, number, issued_at, due_at, status, amount";
+  "id, store_id, order_id, number, issued_at, due_at, status, amount";
 
 export const SETTINGS_COLUMNS =
-  "id, store_name, currency, tax_rate, low_stock_threshold, " +
+  "id, store_id, store_name, currency, tax_rate, low_stock_threshold, " +
   "contact_email, contact_phone, address, footer_tagline, " +
   "facebook_url, instagram_url, twitter_url, youtube_url, linkedin_url, tiktok_url";
 
@@ -131,6 +131,7 @@ const PLACEHOLDER_IMAGE =
 
 export interface ProductRow {
   id: string;
+  store_id: string;
   sku: string;
   name_en: string | null;
   name_ar: string | null;
@@ -201,6 +202,7 @@ export function productFromRow(r: ProductRow): Product {
   const images = normaliseImages(r.images, r.image);
   return {
     id: r.id,
+    storeId: r.store_id,
     sku: r.sku,
     name: pickLocalized(r.name_en, r.name_ar, r.name_fr, "Untitled product"),
     description: pickLocalized(
@@ -225,6 +227,7 @@ export function productFromRow(r: ProductRow): Product {
 export function productToRow(p: Partial<Product>): Partial<ProductRow> {
   const row: Partial<ProductRow> = {};
   if (p.id !== undefined) row.id = p.id;
+  if (p.storeId !== undefined) row.store_id = p.storeId;
   if (p.sku !== undefined) row.sku = p.sku;
   if (p.name) {
     // Fill blanks with the EN value before writing so we never persist a
@@ -276,6 +279,7 @@ export function productToRow(p: Partial<Product>): Partial<ProductRow> {
 
 export interface CategoryRow {
   id: string;
+  store_id: string;
   slug: string;
   name_en: string | null;
   name_ar: string | null;
@@ -286,10 +290,9 @@ export interface CategoryRow {
 export function categoryFromRow(r: CategoryRow): Category {
   return {
     id: r.id,
+    storeId: r.store_id,
     slug: r.slug,
     name: pickLocalized(r.name_en, r.name_ar, r.name_fr, r.slug),
-    // If the icon column is NULL/empty, fall back to a generic grid glyph so
-    // CategoryChips still renders instead of crashing on an unknown name.
     icon: firstNonEmpty(r.icon) || "LayoutGrid",
   };
 }
@@ -300,6 +303,7 @@ export function categoryFromRow(r: CategoryRow): Category {
 
 export interface UserRow {
   id: string;
+  store_id: string;
   email: string;
   name: string;
   role: "customer" | "admin";
@@ -317,6 +321,7 @@ export interface UserRow {
 export function userFromRow(r: UserRow): User {
   return {
     id: r.id,
+    storeId: r.store_id,
     email: r.email,
     name: r.name,
     role: r.role,
@@ -335,6 +340,7 @@ export function userFromRow(r: UserRow): User {
 export function userToRow(u: Partial<User>): Partial<UserRow> {
   const row: Partial<UserRow> = {};
   if (u.id !== undefined) row.id = u.id;
+  if (u.storeId !== undefined) row.store_id = u.storeId;
   if (u.email !== undefined) row.email = u.email;
   if (u.name !== undefined) row.name = u.name;
   if (u.role !== undefined) row.role = u.role;
@@ -356,6 +362,7 @@ export function userToRow(u: Partial<User>): Partial<UserRow> {
 
 export interface OrderRow {
   id: string;
+  store_id: string;
   user_id: string | null;
   customer_name: string;
   customer_email: string | null;
@@ -380,6 +387,7 @@ export interface OrderItemRow {
 export function orderFromRow(r: OrderRow, items: OrderItemRow[]): Order {
   return {
     id: r.id,
+    storeId: r.store_id,
     userId: r.user_id ?? undefined,
     customer: {
       name: r.customer_name,
@@ -409,6 +417,7 @@ export function orderFromRow(r: OrderRow, items: OrderItemRow[]): Order {
 
 export interface InvoiceRow {
   id: string;
+  store_id: string;
   order_id: string;
   number: string;
   issued_at: string;
@@ -420,6 +429,7 @@ export interface InvoiceRow {
 export function invoiceFromRow(r: InvoiceRow): Invoice {
   return {
     id: r.id,
+    storeId: r.store_id,
     orderId: r.order_id,
     number: r.number,
     issuedAt: r.issued_at,
@@ -435,6 +445,7 @@ export function invoiceFromRow(r: InvoiceRow): Invoice {
 
 export interface SettingsRow {
   id: number;
+  store_id: string;
   store_name: string;
   currency: string;
   tax_rate: number | string;
@@ -458,6 +469,7 @@ export interface SettingsRow {
 
 export function settingsFromRow(r: SettingsRow): Settings {
   return {
+    storeId: r.store_id,
     storeName: r.store_name,
     currency: r.currency,
     taxRate: num(r.tax_rate, 10),
@@ -477,6 +489,7 @@ export function settingsFromRow(r: SettingsRow): Settings {
 
 export function settingsToRow(s: Partial<Settings>): Partial<SettingsRow> {
   const row: Partial<SettingsRow> = {};
+  if (s.storeId !== undefined) row.store_id = s.storeId;
   if (s.storeName !== undefined) row.store_name = s.storeName;
   if (s.currency !== undefined) row.currency = s.currency;
   if (s.taxRate !== undefined) row.tax_rate = s.taxRate;

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getOrder } from "@/lib/server/db";
 import { handle, httpError } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 
 // ---------------------------------------------------------------------------
 // Public order tracking endpoint.
@@ -55,6 +56,7 @@ function redactPhone(phone: string): string {
 
 export const GET = (req: NextRequest) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const { searchParams } = new URL(req.url);
     const idRaw = searchParams.get("id")?.trim() ?? "";
     const emailRaw = searchParams.get("email")?.trim().toLowerCase() ?? "";
@@ -69,7 +71,7 @@ export const GET = (req: NextRequest) =>
       httpError(400, "Either email or phone is required for tracking");
     }
 
-    const order = await getOrder(idRaw);
+    const order = await getOrder(idRaw, storeId);
     // Constant "Not found" message regardless of which check failed, so the
     // endpoint cannot be used to confirm whether an order id exists.
     if (!order) httpError(404, "Order not found");

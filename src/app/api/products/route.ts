@@ -3,18 +3,20 @@ import { createProduct, listProducts, nextProductId } from "@/lib/server/db";
 import { getCurrentUser } from "@/lib/server/auth";
 import { emit } from "@/lib/server/bus";
 import { handle, httpError } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 import type { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/products?category=slug&q=text — public.
+// GET /api/products?category=slug&q=text — public (tenant-scoped).
 export const GET = (req: NextRequest) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
     const q = searchParams.get("q")?.toLowerCase().trim() ?? "";
 
-    let list = await listProducts();
+    let list = await listProducts(storeId);
     if (category && category !== "all") {
       list = list.filter(
         (p) =>
@@ -32,9 +34,10 @@ export const GET = (req: NextRequest) =>
     return list;
   });
 
-// POST /api/products — admin only.
+// POST /api/products — admin only (tenant-scoped).
 export const POST = (req: NextRequest) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") httpError(401, "Unauthorized");
 
@@ -43,9 +46,6 @@ export const POST = (req: NextRequest) =>
       httpError(400, "name, price, and categoryId are required");
     }
     const id = await nextProductId();
-    // Normalise image input: accept either `images: string[]` (new multi-
-    // image path), `image: string` (legacy single-URL callers), or neither
-    // (fall back to a placeholder).
     const imagesIn = Array.isArray(body.images)
       ? body.images.filter(
           (u): u is string => typeof u === "string" && u.trim().length > 0
@@ -64,16 +64,13 @@ export const POST = (req: NextRequest) =>
 
     const product: Product = {
       id,
+      storeId,
       sku: body.sku ?? `NVA-${Date.now()}`,
       name: body.name as Product["name"],
       description:
         body.description ??
         ({ en: "", ar: "", fr: "" } as Product["description"]),
       price: Number(body.price),
-      // Cost-of-goods price. Coerce to a finite non-negative number; missing
-      // / NaN inputs default to 0 so the row still validates against the
-      // numeric(12,2) NOT NULL DEFAULT 0 column. The admin "Expenses &
-      // Profits" view reads this back to compute stock margin.
       purchasePrice: Math.max(0, Number(body.purchasePrice ?? 0) || 0),
       categoryId: body.categoryId!,
       stock: Number(body.stock ?? 0),
