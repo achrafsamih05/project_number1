@@ -70,12 +70,15 @@ export default function CheckoutPage() {
     setError(null);
     setSubmitting(true);
     try {
+      // For guests: email is not in the form at all, so it will be undefined.
+      // For authenticated users: email is present as a readonly field.
+      const emailValue = data.get("email");
       const order = await apiSend<{ id: string }>("/api/orders", "POST", {
         customer: {
-          name: String(data.get("name") ?? ""),
-          email: data.get("email") ? String(data.get("email")) : undefined,
-          phone: String(data.get("phone") ?? ""),
-          address: String(data.get("address") ?? ""),
+          name: String(data.get("name") ?? "").trim(),
+          email: emailValue ? String(emailValue).trim() || undefined : undefined,
+          phone: String(data.get("phone") ?? "").trim(),
+          address: String(data.get("address") ?? "").trim(),
         },
         items: items.map((i) => ({
           productId: i.productId,
@@ -187,8 +190,8 @@ export default function CheckoutPage() {
 
           <form onSubmit={onSubmit} className="space-y-4">
             <Field label={t("checkout.name")} name="name" required defaultValue={me?.name} />
-            {/* Email: hidden for guests (phone is the primary identifier),
-                readonly + auto-filled for authenticated users */}
+
+            {/* Email: HIDDEN for guests (phone-first market), read-only for auth users */}
             {me && (
               <Field
                 label={t("checkout.email")}
@@ -198,7 +201,15 @@ export default function CheckoutPage() {
                 readOnly
               />
             )}
-            <Field label={t("checkout.phone")} name="phone" type="tel" required defaultValue={me?.phone} />
+
+            <Field
+              label={t("checkout.phone")}
+              name="phone"
+              type="tel"
+              required
+              defaultValue={me?.phone}
+              placeholder={t("checkout.phonePlaceholder")}
+            />
             <Field
               label={t("checkout.address")}
               name="address"
@@ -270,6 +281,7 @@ function Field({
   required,
   defaultValue,
   readOnly,
+  placeholder,
 }: {
   label: string;
   name: string;
@@ -277,16 +289,21 @@ function Field({
   required?: boolean;
   defaultValue?: string;
   readOnly?: boolean;
+  placeholder?: string;
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm text-ink-600">{label}</span>
+      <span className="mb-1 flex items-center gap-1 text-sm text-ink-600">
+        {label}
+        {required && <span className="text-red-500">*</span>}
+      </span>
       <input
         name={name}
         type={type}
         required={required}
         defaultValue={defaultValue}
         readOnly={readOnly}
+        placeholder={placeholder}
         className={`h-11 w-full rounded-xl border border-ink-200 bg-white px-3 text-sm transition focus:border-ink-900 focus:outline-none ${readOnly ? "cursor-not-allowed bg-ink-50 text-ink-500" : ""}`}
       />
     </label>

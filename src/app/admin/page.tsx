@@ -25,9 +25,17 @@ interface Analytics {
     cancelled: number;
   };
   topProducts: { productId: string; name: string; qty: number; revenue: number }[];
-  lowStock: { id: string; name: string; stock: number; sku: string }[];
+  lowStock: { id: string; name: string; nameAr: string; stock: number; sku: string; price: number; purchasePrice: number }[];
   series: { date: string; revenue: number; orders: number }[];
   currency: string;
+  erp: {
+    capitalTied: number;
+    projectedRevenue: number;
+    projectedProfit: number;
+    averageMargin: number;
+    totalStockUnits: number;
+    unpricedProducts: number;
+  };
 }
 
 export default function AdminHome() {
@@ -133,6 +141,111 @@ export default function AdminHome() {
         )}
 
         <div className="grid gap-4 lg:grid-cols-5">
+          {/* ─── Micro-ERP Financial Overview ─── */}
+          {data?.erp && (
+            <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft lg:col-span-5">
+              <div className="mb-4">
+                <h2 className="text-base font-semibold">{t("erp.title")}</h2>
+                <p className="text-xs text-ink-500">{t("erp.subtitle")}</p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <ErpCard
+                  label={t("erp.capitalTied")}
+                  value={formatCurrency(data.erp.capitalTied, locale, data.currency)}
+                  hint={`${data.erp.totalStockUnits} ${t("erp.units")}`}
+                  icon="Landmark"
+                  tone="ink"
+                />
+                <ErpCard
+                  label={t("erp.projectedRevenue")}
+                  value={formatCurrency(data.erp.projectedRevenue, locale, data.currency)}
+                  hint={t("erp.projectedRevenue.hint")}
+                  icon="TrendingUp"
+                  tone="brand"
+                />
+                <ErpCard
+                  label={t("erp.projectedProfit")}
+                  value={formatCurrency(data.erp.projectedProfit, locale, data.currency)}
+                  hint={t("erp.projectedProfit.hint")}
+                  icon="BadgeDollarSign"
+                  tone={data.erp.projectedProfit >= 0 ? "emerald" : "red"}
+                />
+                <ErpCard
+                  label={t("erp.averageMargin")}
+                  value={`${data.erp.averageMargin}%`}
+                  hint={
+                    data.erp.unpricedProducts > 0
+                      ? `${data.erp.unpricedProducts} product(s) missing cost`
+                      : t("erp.averageMargin.hint")
+                  }
+                  icon="Percent"
+                  tone={data.erp.averageMargin >= 0 ? "emerald" : "red"}
+                />
+              </div>
+            </section>
+          )}
+
+          {/* ─── Low Stock Alerts (Enhanced) ─── */}
+          {data && (
+            <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft lg:col-span-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-base font-semibold">{t("erp.lowStock")}</h2>
+                <Link
+                  href="/admin/inventory"
+                  className="text-sm text-brand-600 hover:underline"
+                >
+                  {t("admin.inventory")}
+                </Link>
+              </div>
+              {data.lowStock.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px] text-sm">
+                    <thead className="bg-ink-50 text-ink-600">
+                      <tr>
+                        <th className="px-3 py-2 text-start font-medium">{locale === "ar" ? "المنتج" : "Product"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "المخزون" : "Stock"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "سعر الشراء" : "Cost"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "سعر البيع" : "Sale"}</th>
+                        <th className="px-3 py-2 text-end font-medium">{locale === "ar" ? "رأس المال" : "Capital"}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-ink-100">
+                      {data.lowStock.map((p) => (
+                        <tr key={p.id} className="hover:bg-ink-50/50">
+                          <td className="px-3 py-2">
+                            <div className="font-medium">{locale === "ar" ? p.nameAr : p.name}</div>
+                            <div className="text-xs text-ink-500">{p.sku}</div>
+                          </td>
+                          <td className="px-3 py-2 text-end">
+                            <span
+                              className={
+                                p.stock <= 5
+                                  ? "inline-flex rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700"
+                                  : "inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
+                              }
+                            >
+                              {p.stock}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-end text-ink-600">
+                            {p.purchasePrice > 0 ? formatCurrency(p.purchasePrice, locale, data.currency) : "—"}
+                          </td>
+                          <td className="px-3 py-2 text-end">
+                            {formatCurrency(p.price, locale, data.currency)}
+                          </td>
+                          <td className="px-3 py-2 text-end font-medium">
+                            {formatCurrency(p.purchasePrice * p.stock, locale, data.currency)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-ink-400">{t("erp.lowStock.empty")}</p>
+              )}
+            </section>
+          )}
           <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft lg:col-span-3">
             <h2 className="mb-4 text-base font-semibold">Top products</h2>
             {data && data.topProducts.length > 0 ? (
@@ -176,46 +289,6 @@ export default function AdminHome() {
                 <Bar label="Delivered" value={data.orderStatus.delivered} total={data.orders} icon="CheckCircle2" color="bg-emerald-500" />
                 <Bar label="Cancelled" value={data.orderStatus.cancelled} total={data.orders} icon="XCircle" color="bg-red-500" />
               </div>
-            )}
-          </section>
-
-          <section className="rounded-2xl border border-ink-100 bg-white p-5 shadow-soft lg:col-span-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-base font-semibold">Stock alerts</h2>
-              <Link
-                href="/admin/inventory"
-                className="text-sm text-brand-600 hover:underline"
-              >
-                Manage inventory
-              </Link>
-            </div>
-            {data && data.lowStock.length > 0 ? (
-              <ul className="divide-y divide-ink-100">
-                {data.lowStock.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex items-center justify-between py-2 text-sm"
-                  >
-                    <div>
-                      <div className="font-medium">{p.name}</div>
-                      <div className="text-xs text-ink-500">{p.sku}</div>
-                    </div>
-                    <span
-                      className={
-                        p.stock <= 10
-                          ? "rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700"
-                          : "rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700"
-                      }
-                    >
-                      {p.stock} left
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-ink-400">
-                All products well stocked.
-              </p>
             )}
           </section>
         </div>
@@ -286,6 +359,55 @@ function Bar({
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-ink-100">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+
+
+// ---------- Micro-ERP Card -------------------------------------------------
+
+type ErpTone = "ink" | "brand" | "emerald" | "red";
+
+const ERP_TONE: Record<ErpTone, { icon: string; ring: string }> = {
+  ink: { icon: "bg-ink-900 text-white", ring: "ring-ink-100" },
+  brand: { icon: "bg-brand-500 text-white", ring: "ring-brand-100" },
+  emerald: { icon: "bg-emerald-600 text-white", ring: "ring-emerald-100" },
+  red: { icon: "bg-red-600 text-white", ring: "ring-red-100" },
+};
+
+function ErpCard({
+  label,
+  value,
+  hint,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  icon: string;
+  tone: ErpTone;
+}) {
+  const palette = ERP_TONE[tone];
+  return (
+    <div
+      className={`flex items-start gap-3 rounded-2xl border border-ink-100 bg-white p-4 shadow-soft ring-1 ${palette.ring}`}
+    >
+      <span
+        className={`grid h-10 w-10 flex-none place-items-center rounded-xl ${palette.icon}`}
+      >
+        <Icon name={icon} size={18} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-medium uppercase tracking-wide text-ink-500">
+          {label}
+        </p>
+        <p className="mt-0.5 truncate text-xl font-semibold tracking-tight">
+          {value}
+        </p>
+        {hint && <p className="mt-0.5 text-xs text-ink-500">{hint}</p>}
       </div>
     </div>
   );
