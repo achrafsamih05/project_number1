@@ -6,19 +6,20 @@ import {
   listUsers,
 } from "@/lib/server/db";
 import { handle } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/analytics — admin only (gated via middleware).
-// Returns real, computed numbers — no placeholders.
+// GET /api/analytics — admin only (gated via middleware, tenant-scoped).
 export const GET = () =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const [orders, invoices, products, users, settings] = await Promise.all([
-      listOrders(),
-      listInvoices(),
-      listProducts(),
-      listUsers(),
-      getSettings(),
+      listOrders(storeId),
+      listInvoices(storeId),
+      listProducts(storeId),
+      listUsers(storeId),
+      getSettings(storeId),
     ]);
 
     const revenue = +invoices

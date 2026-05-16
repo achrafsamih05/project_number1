@@ -6,6 +6,8 @@ export type LocalizedString = Record<Locale, string>;
 
 export interface Category {
   id: string;
+  /** The store this category belongs to (multi-tenant). */
+  storeId: string;
   slug: string;
   name: LocalizedString;
   icon: string; // lucide icon name
@@ -13,6 +15,8 @@ export interface Category {
 
 export interface Product {
   id: string;
+  /** The store this product belongs to (multi-tenant). */
+  storeId: string;
   sku: string;
   name: LocalizedString;
   description: LocalizedString;
@@ -75,6 +79,8 @@ export interface ShippingAddress {
 
 export interface Order {
   id: string;
+  /** The store this order belongs to (multi-tenant). */
+  storeId: string;
   userId?: string;
   customer: ShippingAddress;
   items: {
@@ -92,6 +98,8 @@ export interface Order {
 
 export interface Invoice {
   id: string;
+  /** The store this invoice belongs to (multi-tenant). */
+  storeId: string;
   orderId: string;
   number: string;
   issuedAt: string;
@@ -104,6 +112,8 @@ export type UserRole = "customer" | "admin";
 
 export interface User {
   id: string;
+  /** The store this user belongs to (multi-tenant). */
+  storeId: string;
   email: string;
   name: string;
   role: UserRole;
@@ -122,6 +132,8 @@ export interface User {
 export type PublicUser = Omit<User, "passwordHash">;
 
 export interface Settings {
+  /** The store these settings belong to (multi-tenant). */
+  storeId: string;
   storeName: string;
   currency: string; // ISO 4217
   taxRate: number; // percent, e.g. 10

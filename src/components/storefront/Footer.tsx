@@ -60,6 +60,7 @@ export function Footer() {
   // While the first GET is in flight we render a minimal fallback so the
   // page layout doesn't shift when the data arrives.
   const s: Settings = settings ?? {
+    storeId: "",
     storeName: "Nova",
     currency: "USD",
     taxRate: 10,

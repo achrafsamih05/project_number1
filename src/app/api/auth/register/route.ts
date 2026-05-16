@@ -8,11 +8,13 @@ import {
 import { createUser, getUserByEmail } from "@/lib/server/db";
 import { emit } from "@/lib/server/bus";
 import { handle, httpError } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 import type { User } from "@/lib/types";
 
-// POST /api/auth/register — customers only; admin accounts are seeded.
+// POST /api/auth/register — customers only (tenant-scoped).
 export const POST = (req: NextRequest) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") httpError(400, "Invalid body");
 
@@ -37,11 +39,9 @@ export const POST = (req: NextRequest) =>
     const existing = await getUserByEmail(email);
     if (existing) httpError(409, "Email already registered");
 
-    // Build the row from the exact fields our Supabase `users` table expects
-    // (see supabase/schema.sql). We hash the password before it ever leaves
-    // this process; plaintext never hits the DB or a log line.
     const draft: User = {
       id: `u-${Date.now().toString(36)}`,
+      storeId,
       email: email.toLowerCase().trim(),
       name,
       role: "customer",
@@ -56,8 +56,6 @@ export const POST = (req: NextRequest) =>
       lastSeenAt: new Date().toISOString(),
     };
 
-    // createUser returns the persisted row — use THAT, not our local draft,
-    // so the response reflects exactly what the database wrote.
     const created = await createUser(draft);
     emit({ channel: "users", action: "created", id: created.id });
 

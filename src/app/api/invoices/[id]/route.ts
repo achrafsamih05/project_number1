@@ -3,30 +3,33 @@ import { getInvoice, updateInvoice } from "@/lib/server/db";
 import { getCurrentUser } from "@/lib/server/auth";
 import { emit } from "@/lib/server/bus";
 import { handle, httpError } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 
-// GET /api/invoices/:id — admin only.
+// GET /api/invoices/:id — admin only (tenant-scoped).
 export const GET = (
   _: NextRequest,
   { params }: { params: { id: string } }
 ) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") httpError(401, "Unauthorized");
-    const inv = await getInvoice(params.id);
+    const inv = await getInvoice(params.id, storeId);
     if (!inv) httpError(404, "Not found");
     return inv;
   });
 
-// PATCH /api/invoices/:id — admin only. Toggle paid/unpaid.
+// PATCH /api/invoices/:id — admin only (tenant-scoped).
 export const PATCH = (
   req: NextRequest,
   { params }: { params: { id: string } }
 ) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") httpError(401, "Unauthorized");
     const body = await req.json();
-    const updated = await updateInvoice(params.id, body);
+    const updated = await updateInvoice(params.id, body, storeId);
     if (!updated) httpError(404, "Not found");
     emit({ channel: "invoices", action: "updated", id: params.id });
     return updated;

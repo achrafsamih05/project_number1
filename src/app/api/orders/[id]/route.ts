@@ -3,6 +3,7 @@ import { getOrder, updateOrder } from "@/lib/server/db";
 import { getCurrentUser } from "@/lib/server/auth";
 import { emit } from "@/lib/server/bus";
 import { handle, httpError } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 import type { Order, OrderStatus, ShippingAddress } from "@/lib/types";
 
 const VALID: OrderStatus[] = [
@@ -13,13 +14,14 @@ const VALID: OrderStatus[] = [
   "cancelled",
 ];
 
-// GET /api/orders/:id — owner or admin.
+// GET /api/orders/:id — owner or admin (tenant-scoped).
 export const GET = (
   _: NextRequest,
   { params }: { params: { id: string } }
 ) =>
   handle(async () => {
-    const o = await getOrder(params.id);
+    const storeId = await requireStoreId();
+    const o = await getOrder(params.id, storeId);
     if (!o) httpError(404, "Not found");
     const user = await getCurrentUser();
     if (!user) httpError(401, "Unauthorized");
@@ -29,29 +31,13 @@ export const GET = (
     return o;
   });
 
-// PATCH /api/orders/:id — admin only.
-//
-// Accepts any combination of:
-//   { status? }                               — quick-status updates from the
-//                                               admin orders list (existing
-//                                               behaviour, unchanged).
-//   { customer?: { name, email, phone, address, city?, postalCode?, country? } }
-//                                             — edit shipping/contact details.
-//   { items?: Array<{ productId, name, quantity, price }> }
-//                                             — full items replacement.
-//   { subtotal?, tax?, total? }               — admin-set totals (used when
-//                                               the admin reprices an order
-//                                               manually). Recomputed from
-//                                               items if items are sent and
-//                                               totals are not.
-//
-// We validate each field independently so a typo in one section never leaks
-// half-applied state into the database.
+// PATCH /api/orders/:id — admin only (tenant-scoped).
 export const PATCH = (
   req: NextRequest,
   { params }: { params: { id: string } }
 ) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") httpError(401, "Unauthorized");
 
@@ -125,11 +111,6 @@ export const PATCH = (
     }
 
     // --- totals ---
-    // If the caller passed explicit totals, take those; otherwise, when
-    // items were replaced, recompute subtotal from the items and leave
-    // tax/total alone unless the route already had a tax rate. We avoid
-    // pulling settings here — the client-side editor sends precomputed
-    // totals so the admin sees what they confirm.
     if (body!.subtotal !== undefined)
       patch.subtotal = Math.max(0, Number(body!.subtotal) || 0);
     else if (computedSubtotal !== undefined) patch.subtotal = computedSubtotal;
@@ -142,7 +123,7 @@ export const PATCH = (
       httpError(400, "No fields to update");
     }
 
-    const updated = await updateOrder(params.id, patch);
+    const updated = await updateOrder(params.id, patch, storeId);
     if (!updated) httpError(404, "Not found");
     emit({ channel: "orders", action: "updated", id: params.id });
     return updated;

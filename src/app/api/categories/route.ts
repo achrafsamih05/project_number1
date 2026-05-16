@@ -7,17 +7,22 @@ import {
 import { getCurrentUser } from "@/lib/server/auth";
 import { emit } from "@/lib/server/bus";
 import { handle, httpError } from "@/lib/server/http";
+import { requireStoreId } from "@/lib/server/tenant";
 import type { Category, LocalizedString } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/categories — public.
-export const GET = () => handle(() => listCategories());
+// GET /api/categories — public (tenant-scoped).
+export const GET = () =>
+  handle(async () => {
+    const storeId = await requireStoreId();
+    return listCategories(storeId);
+  });
 
-// POST /api/categories — admin only.
-// Body: { slug, name: { en, ar, fr }, icon }
+// POST /api/categories — admin only (tenant-scoped).
 export const POST = (req: NextRequest) =>
   handle(async () => {
+    const storeId = await requireStoreId();
     const user = await getCurrentUser();
     if (!user || user.role !== "admin") httpError(401, "Unauthorized");
 
@@ -35,9 +40,10 @@ export const POST = (req: NextRequest) =>
       httpError(400, "name.en is required");
     }
 
-    const id = await nextCategoryId(slug);
+    const id = await nextCategoryId(slug, storeId);
     const category: Category = {
       id,
+      storeId,
       slug,
       name: {
         en: body.name.en!,
