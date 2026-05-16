@@ -259,6 +259,29 @@ export const messages: Dict = {
   "inventory.unitsPerDay": { en: "units/day", ar: "وحدة/يوم", fr: "unités/jour" },
   "inventory.days": { en: "days", ar: "يوم", fr: "jours" },
 
+  // Subscription & Plans
+  "plan.free": { en: "Free", ar: "مجاني", fr: "Gratuit" },
+  "plan.starter": { en: "Starter", ar: "مبتدئ", fr: "Starter" },
+  "plan.pro": { en: "Pro", ar: "احترافي", fr: "Pro" },
+  "plan.enterprise": { en: "Enterprise", ar: "مؤسسي", fr: "Entreprise" },
+  "plan.upgrade": { en: "Upgrade Plan", ar: "ترقية الخطة", fr: "Mettre à niveau" },
+  "plan.upgradeRequired": {
+    en: "Upgrade to {plan} to unlock this feature",
+    ar: "قم بالترقية إلى {plan} لفتح هذه الميزة",
+    fr: "Passez à {plan} pour débloquer cette fonctionnalité",
+  },
+  "plan.productLimit": {
+    en: "You've reached the {limit} product limit on the Free plan",
+    ar: "لقد وصلت إلى حد {limit} منتج في الخطة المجانية",
+    fr: "Vous avez atteint la limite de {limit} produits du plan Gratuit",
+  },
+  "plan.featureLocked": {
+    en: "This feature is available on {plan} and above",
+    ar: "هذه الميزة متاحة في خطة {plan} وأعلى",
+    fr: "Cette fonctionnalité est disponible à partir du plan {plan}",
+  },
+  "plan.currentPlan": { en: "Current Plan", ar: "الخطة الحالية", fr: "Plan actuel" },
+
   // Footer
   "footer.contact": { en: "Contact", ar: "اتصل بنا", fr: "Contact" },
   "footer.follow": { en: "Follow us", ar: "تابعنا", fr: "Suivez-nous" },
