@@ -224,6 +224,41 @@ export const messages: Dict = {
     fr: "Confirmer via WhatsApp",
   },
 
+  // AI Description Generator
+  "ai.generateBtn": { en: "Generate with AI", ar: "توليد بالذكاء الاصطناعي", fr: "Générer avec l'IA" },
+  "ai.title": { en: "AI Description Generator", ar: "مولّد الأوصاف بالذكاء الاصطناعي", fr: "Générateur IA de descriptions" },
+  "ai.tone": { en: "Tone", ar: "النبرة", fr: "Ton" },
+  "ai.tone.professional": { en: "Professional", ar: "احترافي", fr: "Professionnel" },
+  "ai.tone.enthusiastic": { en: "Enthusiastic", ar: "حماسي", fr: "Enthousiaste" },
+  "ai.tone.luxury": { en: "Luxury", ar: "فاخر", fr: "Luxe" },
+  "ai.tone.casual": { en: "Casual", ar: "عادي", fr: "Décontracté" },
+  "ai.tone.technical": { en: "Technical", ar: "تقني", fr: "Technique" },
+  "ai.language": { en: "Language", ar: "اللغة", fr: "Langue" },
+  "ai.generate": { en: "Generate", ar: "توليد", fr: "Générer" },
+  "ai.generating": { en: "Generating…", ar: "جارٍ التوليد…", fr: "Génération…" },
+  "ai.nameRequired": { en: "Enter a product name first", ar: "أدخل اسم المنتج أولاً", fr: "Entrez d'abord un nom de produit" },
+
+  // Inventory Intelligence
+  "inventory.intelligence": {
+    en: "Inventory Intelligence",
+    ar: "ذكاء المخزون",
+    fr: "Intelligence d'inventaire",
+  },
+  "inventory.intelligence.subtitle": {
+    en: "Predictive stock depletion based on 14-day sales velocity.",
+    ar: "توقع نفاد المخزون بناءً على سرعة البيع خلال 14 يوماً.",
+    fr: "Prédiction d'épuisement du stock basée sur la vélocité de vente sur 14 jours.",
+  },
+  "inventory.velocity": { en: "Velocity", ar: "معدل السحب", fr: "Vélocité" },
+  "inventory.daysLeft": { en: "Days Left", ar: "الأيام المتبقية", fr: "Jours restants" },
+  "inventory.status": { en: "Status", ar: "الحالة", fr: "Statut" },
+  "inventory.status.critical": { en: "Out of Stock Risk", ar: "خطر نفاد المخزون", fr: "Risque de rupture" },
+  "inventory.status.warning": { en: "Restock Recommended", ar: "يُنصح بإعادة التخزين", fr: "Réapprovisionnement conseillé" },
+  "inventory.status.healthy": { en: "Healthy Stock", ar: "مخزون صحي", fr: "Stock sain" },
+  "inventory.status.stable": { en: "Stable / No recent sales", ar: "مستقر / لا مبيعات حديثة", fr: "Stable / Pas de ventes récentes" },
+  "inventory.unitsPerDay": { en: "units/day", ar: "وحدة/يوم", fr: "unités/jour" },
+  "inventory.days": { en: "days", ar: "يوم", fr: "jours" },
+
   // Footer
   "footer.contact": { en: "Contact", ar: "اتصل بنا", fr: "Contact" },
   "footer.follow": { en: "Follow us", ar: "تابعنا", fr: "Suivez-nous" },

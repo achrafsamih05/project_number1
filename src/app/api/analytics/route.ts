@@ -119,6 +119,57 @@ export const GET = () =>
       });
     }
 
+    // --- Inventory Intelligence: Run Rate & Stock Depletion Prediction ---
+    // Calculate units sold per product in the last 14 days
+    const fourteenDaysAgo = new Date(Date.now() - 14 * DAY);
+    const recentOrders = orders.filter(
+      (o) => new Date(o.createdAt) >= fourteenDaysAgo
+    );
+
+    // Aggregate units sold per productId in the last 14 days
+    const unitsSold14d = new Map<string, number>();
+    for (const o of recentOrders) {
+      for (const item of o.items) {
+        unitsSold14d.set(
+          item.productId,
+          (unitsSold14d.get(item.productId) ?? 0) + item.quantity
+        );
+      }
+    }
+
+    // Build inventory intelligence per product
+    const inventoryIntelligence = products.map((p) => {
+      const sold = unitsSold14d.get(p.id) ?? 0;
+      const dailyRunRate = sold / 14;
+      const daysLeft = dailyRunRate > 0 ? p.stock / dailyRunRate : null; // null = no recent sales
+      let status: "critical" | "warning" | "healthy" | "stable";
+      if (dailyRunRate === 0) {
+        status = "stable"; // No recent sales — stable/no velocity
+      } else if (daysLeft !== null && daysLeft <= 3) {
+        status = "critical"; // Out of stock risk
+      } else if (daysLeft !== null && daysLeft <= 7) {
+        status = "warning"; // Restock recommended
+      } else {
+        status = "healthy";
+      }
+      return {
+        productId: p.id,
+        name: p.name.en,
+        nameAr: p.name.ar,
+        sku: p.sku,
+        stock: p.stock,
+        unitsSold14d: sold,
+        dailyRunRate: +dailyRunRate.toFixed(2),
+        daysLeft: daysLeft !== null ? +daysLeft.toFixed(1) : null,
+        status,
+      };
+    })
+    // Sort: critical first, then warning, then healthy, then stable
+    .sort((a, b) => {
+      const priority = { critical: 0, warning: 1, healthy: 2, stable: 3 };
+      return priority[a.status] - priority[b.status] || (a.daysLeft ?? 999) - (b.daysLeft ?? 999);
+    });
+
     return {
       revenue,
       outstanding,
@@ -141,5 +192,7 @@ export const GET = () =>
         totalStockUnits,
         unpricedProducts,
       },
+      // Inventory Intelligence
+      inventoryIntelligence,
     };
   });

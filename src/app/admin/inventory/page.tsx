@@ -464,6 +464,20 @@ function ProductEditor({
                 className={inputCls}
               />
             </L>
+            {/* AI Description Generator */}
+            <div className="col-span-full">
+              <AIDescriptionGenerator
+                productName={d.nameEn || d.nameAr || d.nameFr}
+                categoryId={d.categoryId}
+                categories={categories}
+                onGenerated={(desc, lang) => {
+                  if (lang === "en") setD({ ...d, descEn: desc });
+                  else if (lang === "ar") setD({ ...d, descAr: desc });
+                  else if (lang === "fr") setD({ ...d, descFr: desc });
+                }}
+              />
+            </div>
+
             <L label="Description (EN)" wide>
               <textarea
                 value={d.descEn}
@@ -707,5 +721,162 @@ function L({
       <span className="mb-1 block text-xs font-medium text-ink-600">{label}</span>
       {children}
     </label>
+  );
+}
+
+
+// ---------------------------------------------------------------------------
+// AI Description Generator — inline component for the product editor.
+// Opens a popover to select tone + language, fires the API, and sets the
+// result directly into the description textarea.
+// ---------------------------------------------------------------------------
+
+type AITone = "professional" | "enthusiastic" | "luxury" | "casual" | "technical";
+type AILang = "en" | "ar" | "fr";
+
+const AI_TONES: { value: AITone; label: string }[] = [
+  { value: "professional", label: "Professional" },
+  { value: "enthusiastic", label: "Enthusiastic" },
+  { value: "luxury", label: "Luxury" },
+  { value: "casual", label: "Casual" },
+  { value: "technical", label: "Technical" },
+];
+
+const AI_LANGS: { value: AILang; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "ar", label: "العربية" },
+  { value: "fr", label: "Français" },
+];
+
+function AIDescriptionGenerator({
+  productName,
+  categoryId,
+  categories,
+  onGenerated,
+}: {
+  productName: string;
+  categoryId: string;
+  categories: { id: string; name: { en: string } }[];
+  onGenerated: (description: string, language: AILang) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [tone, setTone] = useState<AITone>("professional");
+  const [language, setLanguage] = useState<AILang>("en");
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const categoryName =
+    categories.find((c) => c.id === categoryId)?.name?.en || "General";
+
+  async function generate() {
+    if (!productName.trim()) {
+      setError("Enter a product name first");
+      return;
+    }
+    setError(null);
+    setGenerating(true);
+    try {
+      const res = await apiSend<{ description: string }>(
+        "/api/ai/generate-description",
+        "POST",
+        {
+          productName: productName.trim(),
+          category: categoryName,
+          tone,
+          language,
+        }
+      );
+      onGenerated(res.description, language);
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex items-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 hover:bg-brand-100 transition"
+      >
+        <Icon name="Sparkles" size={14} />
+        Generate with AI
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-brand-200 bg-brand-50/50 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-ink-900 flex items-center gap-2">
+          <Icon name="Sparkles" size={16} className="text-brand-600" />
+          AI Description Generator
+        </h4>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="grid h-7 w-7 place-items-center rounded-full text-ink-500 hover:bg-ink-100"
+        >
+          <Icon name="X" size={14} />
+        </button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-ink-600">Tone</span>
+          <select
+            value={tone}
+            onChange={(e) => setTone(e.target.value as AITone)}
+            className="h-9 w-full rounded-lg border border-ink-200 bg-white px-2 text-sm focus:border-ink-900 focus:outline-none"
+          >
+            {AI_TONES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-medium text-ink-600">Language</span>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value as AILang)}
+            className="h-9 w-full rounded-lg border border-ink-200 bg-white px-2 text-sm focus:border-ink-900 focus:outline-none"
+          >
+            {AI_LANGS.map((l) => (
+              <option key={l.value} value={l.value}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {error && (
+        <p className="text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1">{error}</p>
+      )}
+
+      <button
+        type="button"
+        onClick={generate}
+        disabled={generating}
+        className="inline-flex h-9 items-center gap-2 rounded-lg bg-brand-600 px-4 text-xs font-medium text-white hover:bg-brand-700 disabled:opacity-60 transition"
+      >
+        {generating ? (
+          <>
+            <Icon name="Loader2" size={14} className="animate-spin" />
+            Generating…
+          </>
+        ) : (
+          <>
+            <Icon name="Sparkles" size={14} />
+            Generate
+          </>
+        )}
+      </button>
+    </div>
   );
 }
