@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+html,
+body {
+  background: #f7f7f8;
+  color: #151519;
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans);
+}
+
+/* Smooth focus ring for accessibility */
+:focus-visible {
+  outline: 2px solid #3b74ff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Hide scrollbars for horizontal chip rows */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Subtle glass effect reused by toolbar / modals */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(140%) blur(14px);
+  -webkit-backdrop-filter: saturate(140%) blur(14px);
+  border-bottom: 1px solid rgba(20, 20, 30, 0.06);
+}
+
+/* Logical utilities — respect writing direction automatically */
+.ps-safe {
+  padding-inline-start: env(safe-area-inset-left, 0);
+}
+.pe-safe {
+  padding-inline-end: env(safe-area-inset-right, 0);
+}
+
+/* Vertical safe-area insets (iOS home indicator, Android gesture bar).
+   pb-safe is what the mobile BottomNav uses to avoid being covered by
+   the home indicator; pt-safe is available for notched top bars. */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* -----------------------------------------------------------------------
+ * Swipeable table container
+ *
+ * The admin User Management table (and any table that uses this class)
+ * needs to remain fully readable on narrow viewports. We do two things:
+ *
+ *   1. `overflow-x-auto` gives a horizontal scroll with `-webkit-overflow-
+ *      scrolling: touch` for iOS momentum.
+ *   2. A faded gradient overlay on a wrapper `.swipe-table-wrap` fades
+ *      the trailing edge (white → transparent) as a visual indicator that
+ *      more content lives to the side. The overlay is absolute-positioned
+ *      so it does NOT scroll with the table and does not intercept
+ *      pointer events.
+ *
+ * We flip the gradient side for RTL (Arabic) by using a different CSS
+ * custom-prop for the gradient direction and positioning the overlay on
+ * the opposite inline edge.
+ *
+ * Consumers wrap the table like:
+ *   <div class="swipe-table-wrap">
+ *     <div class="swipe-table">
+ *       <table class="min-w-[...]">...</table>
+ *     </div>
+ *   </div>
+ * ---------------------------------------------------------------------*/
+.swipe-table-wrap {
+  position: relative;
+}
+.swipe-table-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-end: 0;
+  width: 48px;
+  pointer-events: none;
+  background: linear-gradient(
+    to left,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.85) 35%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+/* In RTL the gradient sits on the left edge and fades the other way. */
+html[dir="rtl"] .swipe-table-wrap::after {
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.85) 35%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+/* Hide the fade once the viewport is wide enough to show the whole table
+   without scrolling — prevents a permanent ghosty edge on desktop. */
+@media (min-width: 1024px) {
+  .swipe-table-wrap::after {
+    display: none;
+  }
+}
+
+.swipe-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+/* Styled scrollbar so mobile users also get a visible track — a second
+   affordance beyond the gradient that they can swipe. */
+.swipe-table::-webkit-scrollbar {
+  height: 6px;
+}
+.swipe-table::-webkit-scrollbar-thumb {
+  background: rgba(20, 20, 30, 0.25);
+  border-radius: 999px;
+}
+.swipe-table::-webkit-scrollbar-track {
+  background: transparent;
+}
